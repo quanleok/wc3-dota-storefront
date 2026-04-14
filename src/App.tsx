@@ -13,6 +13,7 @@ import {
   DEFAULT_CUSTOM_ENV,
   PROVIDER_FIELDS,
   SAMPLE_APPS,
+  type AppDownload,
   type AppRequirement,
   type AppSourceType,
   type AppVisibility,
@@ -43,7 +44,7 @@ interface UploadFormState {
 const STORAGE_KEY = 'allshareapp-prototype-v3'
 
 const DEFAULT_UPLOAD_FORM: UploadFormState = {
-  sourceType: 'repo',
+  sourceType: 'package',
   sourceValue: '',
   name: '',
   thumbnail: '',
@@ -77,7 +78,7 @@ function loadPrototypeState(): PrototypeState {
 
     const parsed = JSON.parse(saved) as PrototypeState
     return {
-      apps: parsed.apps?.length ? parsed.apps : SAMPLE_APPS,
+      apps: parsed.apps?.length ? parsed.apps.map(hydrateStoredApp) : SAMPLE_APPS,
       favorites: Array.isArray(parsed.favorites) ? parsed.favorites : [],
       credentials: { ...DEFAULT_CREDENTIALS, ...parsed.credentials },
       customEnv: Array.isArray(parsed.customEnv) ? parsed.customEnv : DEFAULT_CUSTOM_ENV,
@@ -92,6 +93,22 @@ function loadPrototypeState(): PrototypeState {
   }
 }
 
+function hydrateStoredApp(app: ShareApp): ShareApp {
+  const bundledApp = SAMPLE_APPS.find((sampleApp) => sampleApp.id === app.id)
+
+  if (bundledApp) {
+    return bundledApp
+  }
+
+  return {
+    ...app,
+    downloads:
+      Array.isArray(app.downloads) && app.downloads.length > 0
+        ? app.downloads
+        : inferDownloadsFromSource(app.sourceType, app.sourceValue),
+  }
+}
+
 function App() {
   const [state, setState] = useState<PrototypeState>(loadPrototypeState)
   const [screen, setScreen] = useState<Screen>('explore')
@@ -103,8 +120,8 @@ function App() {
   const [searchQuery, setSearchQuery] = useState('')
   const [uploadForm, setUploadForm] = useState<UploadFormState>(DEFAULT_UPLOAD_FORM)
   const [uploadFeedback, setUploadFeedback] = useState('')
-  const [runFeedback, setRunFeedback] = useState('')
-  const [actionLoading, setActionLoading] = useState<'run' | 'reveal' | 'download' | null>(null)
+  const [actionFeedback, setActionFeedback] = useState('')
+  const [actionLoading, setActionLoading] = useState<'download' | null>(null)
   const [envDraft, setEnvDraft] = useState<CustomEnvVariable>({
     name: '',
     value: '',
@@ -165,13 +182,13 @@ function App() {
       .slice(0, 3)
   }, [publicApps, selectedApp])
 
-  const readyAppCount = useMemo(
-    () => publicApps.filter((app) => getMissingRequirements(app, state).length === 0).length,
-    [publicApps, state],
+  const downloadableAppCount = useMemo(
+    () => publicApps.filter((app) => app.downloads.length > 0).length,
+    [publicApps],
   )
 
-  const selectedAppMissing = selectedApp ? getMissingRequirements(selectedApp, state) : []
   const selectedAppSaved = selectedApp ? state.favorites.includes(selectedApp.id) : false
+  const primaryDownload = selectedApp ? getPrimaryDownload(selectedApp) : undefined
 
   function openScreen(nextScreen: Screen) {
     startTransition(() => {
@@ -188,7 +205,7 @@ function App() {
 
   function openApp(appId: string) {
     setSelectedAppId(appId)
-    setRunFeedback('')
+    setActionFeedback('')
     openScreen('detail')
   }
 
@@ -225,67 +242,38 @@ function App() {
     })
   }
 
-  function handleRunSelectedApp() {
-    if (!selectedApp) {
-      return
-    }
-
-    if (isLocalTool(selectedApp)) {
-      void handleLocalToolAction('run')
-      return
-    }
-
-    const missing = getMissingRequirements(selectedApp, state)
-
-    if (missing.length > 0) {
-      setRunFeedback(
-        `Missing saved settings: ${missing.map((item) => item.label).join(', ')}.`,
-      )
-      openScreen('settings')
-      return
-    }
-
-    setRunFeedback(
-      `${selectedApp.name} is ready to run with ${selectedApp.requirements
-        .map((item) => item.label)
-        .join(', ')}.`,
-    )
-  }
-
-  async function handleLocalToolAction(action: 'run' | 'reveal') {
-    if (!selectedApp) {
-      return
-    }
-
-    setActionLoading(action)
-
-    try {
-      const response = await fetch(`/api/tools/${selectedApp.id}/${action}`, {
-        method: 'POST',
-      })
-      const payload = (await response.json()) as { ok: boolean; message: string }
-
-      if (!response.ok || !payload.ok) {
-        throw new Error(payload.message || 'Action failed')
-      }
-
-      setRunFeedback(payload.message)
-    } catch (error) {
-      setRunFeedback(error instanceof Error ? error.message : 'Action failed')
-    } finally {
-      setActionLoading(null)
-    }
-  }
-
-  function handleDownloadSelectedApp() {
-    if (!selectedApp || !canDownloadTool(selectedApp)) {
-      return
-    }
-
+  function startDownload(download: AppDownload, appName: string) {
     setActionLoading('download')
-    setRunFeedback(`Downloading ${selectedApp.name}...`)
-    window.location.href = `/api/tools/${selectedApp.id}/download`
+    setActionFeedback(`Downloading ${appName} for ${download.platform}...`)
+
+    if (/^https?:\/\//i.test(download.url)) {
+      window.open(download.url, '_blank', 'noopener,noreferrer')
+      window.setTimeout(() => setActionLoading(null), 400)
+      return
+    }
+
+    const link = document.createElement('a')
+    link.href = download.url
+    link.download = ''
+    link.rel = 'noreferrer'
+    document.body.append(link)
+    link.click()
+    link.remove()
+
     window.setTimeout(() => setActionLoading(null), 400)
+  }
+
+  function handlePrimaryDownload() {
+    if (!selectedApp) {
+      return
+    }
+
+    if (!primaryDownload) {
+      setActionFeedback('No downloadable build published yet.')
+      return
+    }
+
+    startDownload(primaryDownload, selectedApp.name)
   }
 
   function updateCredential(id: ProviderId, value: string) {
@@ -346,7 +334,7 @@ function App() {
       !uploadForm.shortDescription.trim() ||
       !uploadForm.sourceValue.trim()
     ) {
-      setUploadFeedback('Add a source, app name, and short description first.')
+      setUploadFeedback('Add a download source, app name, and short description first.')
       return
     }
 
@@ -369,7 +357,7 @@ function App() {
       kind: 'env' as const,
       key: name,
       label: `${name} env var`,
-      helper: 'Connected by the runner from saved settings.',
+      helper: 'Declared by the app and filled by the user after local install.',
     }))
 
     const newApp: ShareApp = {
@@ -377,7 +365,7 @@ function App() {
       name: uploadForm.name.trim(),
       monogram: resolveMonogram(uploadForm.thumbnail, uploadForm.name),
       shortDescription: uploadForm.shortDescription.trim(),
-      description: `${uploadForm.shortDescription.trim()} This listing is intentionally compact on the directory page, with the setup and runtime details pushed into the standalone detail view.`,
+      description: `${uploadForm.shortDescription.trim()} This listing is intentionally compact on the directory page, with install details and setup notes pushed into the standalone detail view.`,
       category: uploadForm.category,
       visibility: uploadForm.visibility,
       creator: 'You',
@@ -393,16 +381,17 @@ function App() {
           note: uploadForm.sourceValue.trim(),
         },
         {
-          eyebrow: 'Connect',
-          title: 'Saved settings decide runtime',
-          note: 'The app lists requirements. The user keeps the secrets.',
+          eyebrow: 'Install',
+          title: 'Download and use locally',
+          note: 'ShareApp lists the build or package. The app itself runs outside the site.',
         },
         {
-          eyebrow: 'View',
-          title: 'Minimal browse, detailed open page',
-          note: 'The listing stays scan-first and moves setup context into the detail screen.',
+          eyebrow: 'Keys',
+          title: 'Requirements stay explicit',
+          note: 'If the app needs secrets, the listing can still declare them clearly before install.',
         },
       ],
+      downloads: buildUploadDownloads(uploadForm),
       sourceType: uploadForm.sourceType,
       sourceValue: uploadForm.sourceValue.trim(),
       owner: true,
@@ -488,7 +477,7 @@ function App() {
                   {sortMode === 'popular' ? 'Popular apps' : 'New apps'}
                 </p>
                 <p className="section-caption">
-                  {filteredApps.length} listed / {readyAppCount} ready with your saved keys
+                  {filteredApps.length} listed / {downloadableAppCount} downloadable now
                 </p>
               </div>
 
@@ -575,75 +564,66 @@ function App() {
               </div>
 
               <div className="detail-actions">
-                <button
-                  className="primary-button"
-                  onClick={handleRunSelectedApp}
-                  disabled={actionLoading !== null}
-                >
-                  {actionLoading === 'run'
-                    ? 'Opening...'
-                    : getPrimaryActionLabel(selectedApp, selectedAppMissing.length > 0)}
-                </button>
-                {isLocalTool(selectedApp) ? (
-                  <>
-                    <button
-                      className="secondary-button"
-                      onClick={() => void handleLocalToolAction('reveal')}
-                      disabled={actionLoading !== null}
-                    >
-                      {actionLoading === 'reveal' ? 'Revealing...' : 'Reveal'}
-                    </button>
-                    <button
-                      className="secondary-button"
-                      onClick={handleDownloadSelectedApp}
-                      disabled={actionLoading !== null}
-                    >
-                      {actionLoading === 'download' ? 'Preparing...' : 'Download'}
-                    </button>
-                  </>
-                ) : (
+                {primaryDownload ? (
                   <button
-                    className="secondary-button"
-                    onClick={() => handleFavoriteToggle(selectedApp.id)}
+                    className="primary-button"
+                    onClick={handlePrimaryDownload}
+                    disabled={actionLoading !== null}
                   >
-                    {selectedAppSaved ? 'Saved' : 'Save'}
+                    {actionLoading === 'download' ? 'Preparing...' : primaryDownload.label}
+                  </button>
+                ) : (
+                  <button className="primary-button" disabled>
+                    No download yet
                   </button>
                 )}
+                <button
+                  className="secondary-button"
+                  onClick={() => handleFavoriteToggle(selectedApp.id)}
+                >
+                  {selectedAppSaved ? 'Saved' : 'Save'}
+                </button>
               </div>
             </div>
 
-            {runFeedback && <div className="terminal-note">{runFeedback}</div>}
+            {actionFeedback && <div className="terminal-note">{actionFeedback}</div>}
 
             <div className="detail-layout">
               <section className="detail-section">
                 <header className="section-rule">
-                  <span>Required keys</span>
-                  <span>{selectedApp.requirements.length}</span>
+                  <span>Downloads</span>
+                  <span>{selectedApp.downloads.length}</span>
                 </header>
-                {selectedApp.requirements.length > 0 ? (
+                {selectedApp.downloads.length > 0 ? (
                   <>
-                    <ul className="requirement-list">
-                      {selectedApp.requirements.map((requirement) => {
-                        const connection = getRequirementConnection(requirement, state)
+                    <ul className="download-list">
+                      {selectedApp.downloads.map((download) => {
                         return (
-                          <li key={`${selectedApp.id}-${requirement.key}`}>
-                            <div>
-                              <strong>{requirement.label}</strong>
-                              <p>{requirement.helper}</p>
+                          <li key={`${selectedApp.id}-${download.platform}-${download.url}`}>
+                            <div className="download-copy">
+                              <strong>{download.label}</strong>
+                              <p>{download.note}</p>
                             </div>
-                            <span className={connection.connected ? 'status-pill ok' : 'status-pill'}>
-                              {connection.connected ? 'saved' : 'missing'}
-                            </span>
+                            <div className="download-end">
+                              <span className="status-pill ok">{download.platform}</span>
+                              <button
+                                className="secondary-button"
+                                onClick={() => startDownload(download, selectedApp.name)}
+                                disabled={actionLoading !== null}
+                              >
+                                {actionLoading === 'download' ? 'Preparing...' : 'Download'}
+                              </button>
+                            </div>
                           </li>
                         )
                       })}
                     </ul>
                     <p className="section-caption">
-                      Apps only declare requirements. Keys remain in your Settings.
+                      These apps install locally. ShareApp does not execute them in the browser.
                     </p>
                   </>
                 ) : (
-                  <div className="empty-line">No API keys or env vars required for this tool.</div>
+                  <div className="empty-line">No downloadable build published yet.</div>
                 )}
               </section>
 
@@ -666,10 +646,34 @@ function App() {
 
             <section className="detail-section">
               <header className="section-rule">
-                <span>Source</span>
-                <span>{selectedApp.metaLabel}</span>
+                <span>Required keys</span>
+                <span>{selectedApp.requirements.length}</span>
               </header>
-              <p className="mono-path">{selectedApp.sourceValue}</p>
+              {selectedApp.requirements.length > 0 ? (
+                <>
+                  <ul className="requirement-list">
+                    {selectedApp.requirements.map((requirement) => {
+                      const connection = getRequirementConnection(requirement, state)
+                      return (
+                        <li key={`${selectedApp.id}-${requirement.key}`}>
+                          <div>
+                            <strong>{requirement.label}</strong>
+                            <p>{requirement.helper}</p>
+                          </div>
+                          <span className={connection.connected ? 'status-pill ok' : 'status-pill'}>
+                            {connection.connected ? 'saved' : 'missing'}
+                          </span>
+                        </li>
+                      )
+                    })}
+                  </ul>
+                  <p className="section-caption">
+                    Apps only declare requirements. Keys remain in your Settings.
+                  </p>
+                </>
+              ) : (
+                <div className="empty-line">No API keys or env vars required for this tool.</div>
+              )}
             </section>
 
             {relatedApps.length > 0 && (
@@ -692,9 +696,9 @@ function App() {
           <section className="screen form-screen">
             <div className="screen-head">
               <p className="section-label">Upload</p>
-              <h1>Publish a simple listing.</h1>
+              <h1>Publish a downloadable build.</h1>
               <p className="section-caption">
-                Minimal by design. Browse stays clean. Detail pages carry the context.
+                Minimal by design. Browse stays clean. Detail pages carry the install notes.
               </p>
             </div>
 
@@ -704,7 +708,7 @@ function App() {
               <div className="form-block">
                 <label>Source type</label>
                 <div className="inline-select">
-                  {(['repo', 'link', 'package', 'config'] as AppSourceType[]).map((sourceType) => (
+                  {(['package', 'link', 'repo', 'config'] as AppSourceType[]).map((sourceType) => (
                     <button
                       key={sourceType}
                       type="button"
@@ -733,7 +737,7 @@ function App() {
                     sourceValue: value,
                   }))
                 }
-                placeholder="github.com/you/shareapp-tool"
+                placeholder="https://example.com/frameforge-macos.zip"
               />
 
               <div className="form-columns">
@@ -924,7 +928,7 @@ function App() {
               </p>
             </div>
 
-            {runFeedback && <div className="terminal-note">{runFeedback}</div>}
+            {actionFeedback && <div className="terminal-note">{actionFeedback}</div>}
 
             <section className="settings-group">
               <header className="section-rule">
@@ -1180,33 +1184,75 @@ function getRequirementConnection(requirement: AppRequirement, state: PrototypeS
   return { connected: Boolean(saved?.value.trim()) }
 }
 
-function getMissingRequirements(app: ShareApp, state: PrototypeState) {
-  return app.requirements.filter((requirement) => !getRequirementConnection(requirement, state).connected)
+function getPrimaryDownload(app: ShareApp) {
+  return app.downloads[0]
 }
 
-function isLocalTool(app: ShareApp) {
-  return app.sourceValue.startsWith('/') && (app.sourceType === 'desktop' || app.sourceType === 'html')
+function buildUploadDownloads(uploadForm: UploadFormState): AppDownload[] {
+  return inferDownloadsFromSource(uploadForm.sourceType, uploadForm.sourceValue)
 }
 
-function canDownloadTool(app: ShareApp) {
-  return app.sourceValue.startsWith('/')
-}
+function inferDownloadsFromSource(sourceType: AppSourceType, sourceValue: string): AppDownload[] {
+  const normalizedSource = sourceValue.trim()
 
-function getPrimaryActionLabel(app: ShareApp, hasMissingRequirements: boolean) {
-  if (isLocalTool(app)) {
-    return app.sourceType === 'desktop' ? 'Run app' : 'Open tool'
+  if (!normalizedSource) {
+    return []
   }
 
-  return hasMissingRequirements ? 'Connect keys in settings' : 'Open / Run'
+  if (sourceType === 'desktop') {
+    return [
+      {
+        platform: 'macOS',
+        label: 'Download for macOS',
+        url: normalizedSource,
+        note: 'Download the macOS build, then install it locally.',
+      },
+    ]
+  }
+
+  if (sourceType === 'html') {
+    return [
+      {
+        platform: 'Browser',
+        label: 'Download local HTML tool',
+        url: normalizedSource,
+        note: 'Download the package, unzip it, and open the HTML file locally in a browser.',
+      },
+    ]
+  }
+
+  if (sourceType === 'package') {
+    return [
+      {
+        platform: 'Package',
+        label: 'Download package',
+        url: normalizedSource,
+        note: 'Download the packaged build and install it locally.',
+      },
+    ]
+  }
+
+  if (sourceType === 'link') {
+    return [
+      {
+        platform: 'External',
+        label: 'Open external download',
+        url: normalizedSource,
+        note: 'Open the external link to download or install the app outside ShareApp.',
+      },
+    ]
+  }
+
+  return []
 }
 
 function formatSourceType(sourceType: AppSourceType) {
   const labels: Record<AppSourceType, string> = {
     desktop: 'desktop app',
-    html: 'html tool',
+    html: 'local html tool',
     repo: 'repo',
-    link: 'link',
-    package: 'package',
+    link: 'download link',
+    package: 'package build',
     config: 'config',
   }
   return labels[sourceType]
@@ -1215,10 +1261,10 @@ function formatSourceType(sourceType: AppSourceType) {
 function getSourceMetaLabel(sourceType: AppSourceType) {
   const labels: Record<AppSourceType, string> = {
     desktop: 'macOS app',
-    html: 'HTML tool',
+    html: 'Local HTML tool',
     repo: 'repo source',
-    link: 'web link',
-    package: 'package',
+    link: 'download link',
+    package: 'package build',
     config: 'config',
   }
   return labels[sourceType]

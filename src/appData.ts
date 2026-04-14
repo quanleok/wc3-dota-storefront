@@ -26,6 +26,13 @@ export interface AppPreview {
   note: string
 }
 
+export interface AppDownload {
+  platform: string
+  label: string
+  url: string
+  note: string
+}
+
 export interface ShareApp {
   id: string
   name: string
@@ -41,6 +48,7 @@ export interface ShareApp {
   tint: string
   requirements: AppRequirement[]
   previews: AppPreview[]
+  downloads: AppDownload[]
   sourceType: AppSourceType
   sourceValue: string
   owner: boolean
@@ -106,7 +114,7 @@ export const SAMPLE_APPS: ShareApp[] = [
     monogram: 'FG',
     shortDescription: 'Lightweight popup to scrub a video and capture frames fast.',
     description:
-      'Frame Grab is a real local macOS tool from your Desktop tools folder. Its Python source describes it as a lightweight popup for opening a video from Finder, scrubbing quickly, and saving still frames without extra overhead.',
+      'Frame Grab is a downloadable macOS utility for opening a video, scrubbing quickly, and saving still frames without extra overhead. ShareApp only distributes the build. The app itself installs and runs locally on your machine.',
     category: 'Video',
     visibility: 'public',
     creator: 'Quan',
@@ -132,10 +140,18 @@ export const SAMPLE_APPS: ShareApp[] = [
         note: 'This tool is optimized for a very short local workflow rather than a large editing workspace.',
       },
     ],
+    downloads: [
+      {
+        platform: 'macOS',
+        label: 'Download for macOS',
+        url: '/downloads/frame-grab-macos.zip',
+        note: 'Unzip the archive, then move Frame Grab.app into Applications before opening it.',
+      },
+    ],
     sourceType: 'desktop',
-    sourceValue: '/Users/quan/Desktop/tools/Frame Grab.app',
+    sourceValue: '/downloads/frame-grab-macos.zip',
     owner: true,
-    status: 'Local tool',
+    status: 'Downloadable',
     metaLabel: 'macOS app',
   },
   {
@@ -144,7 +160,7 @@ export const SAMPLE_APPS: ShareApp[] = [
     monogram: 'FE',
     shortDescription: 'Video player, frame extractor, and clip trimmer in one local GUI tool.',
     description:
-      'Frame Extractor is a real local desktop app bundle backed by a larger Python source file in your tools folder. It combines frame export, clip trimming, video preview, and ffmpeg-driven utilities in a single interface.',
+      'Frame Extractor is a downloadable macOS desktop utility that combines frame export, clip trimming, video preview, and ffmpeg-driven utilities in one local app. ShareApp lists the build, but the tool itself installs and runs outside the site.',
     category: 'Video',
     visibility: 'public',
     creator: 'Quan',
@@ -170,10 +186,18 @@ export const SAMPLE_APPS: ShareApp[] = [
         note: 'This is the heavier local video utility in the set, with playback and more advanced export behavior.',
       },
     ],
+    downloads: [
+      {
+        platform: 'macOS',
+        label: 'Download for macOS',
+        url: '/downloads/frame-extractor-macos.zip',
+        note: 'Unzip the archive, then move Frame Extractor.app into Applications before opening it.',
+      },
+    ],
     sourceType: 'desktop',
-    sourceValue: '/Users/quan/Desktop/tools/Frame Extractor.app',
+    sourceValue: '/downloads/frame-extractor-macos.zip',
     owner: true,
-    status: 'Local tool',
+    status: 'Downloadable',
     metaLabel: 'macOS app',
   },
   {
@@ -182,7 +206,7 @@ export const SAMPLE_APPS: ShareApp[] = [
     monogram: 'SF',
     shortDescription: 'Split and clean sprite sheets into individual elements.',
     description:
-      'SpriteForge comes from the real `sprite-splitter (1).html` file in your Desktop tools folder. The HTML title names it `SpriteForge — Split + Clean`, and the interface is built around dropping a sprite sheet, detecting the background, splitting elements, cleaning them, and downloading the selected outputs.',
+      'SpriteForge is distributed as a downloadable local HTML tool. Download the zip, unpack it, and open the file in your browser on macOS or Windows to split sprite sheets, clean the background, and export the pieces locally.',
     category: 'Image',
     visibility: 'public',
     creator: 'Quan',
@@ -208,10 +232,18 @@ export const SAMPLE_APPS: ShareApp[] = [
         note: 'This is a focused local image utility rather than a backend-powered app.',
       },
     ],
+    downloads: [
+      {
+        platform: 'Browser',
+        label: 'Download local HTML tool',
+        url: '/downloads/spriteforge-local.zip',
+        note: 'Unzip the package, then open the HTML file locally in Chrome, Edge, Safari, or another modern browser.',
+      },
+    ],
     sourceType: 'html',
-    sourceValue: '/Users/quan/Desktop/tools/sprite-splitter (1).html',
+    sourceValue: '/downloads/spriteforge-local.zip',
     owner: true,
-    status: 'Local tool',
-    metaLabel: 'HTML tool',
+    status: 'Downloadable',
+    metaLabel: 'Local HTML tool',
   },
 ]

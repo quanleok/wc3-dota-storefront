@@ -413,7 +413,8 @@
   letter-spacing: 0.08em;
 }
 
-.requirement-list {
+.requirement-list,
+.download-list {
   list-style: none;
   margin: 0;
   padding: 0;
@@ -422,6 +423,7 @@
 }
 
 .requirement-list li,
+.download-list li,
 .settings-row,
 .env-item {
   display: flex;
@@ -441,6 +443,19 @@
 .status-pill.ok {
   color: var(--accent);
   border-color: var(--accent-soft);
+}
+
+.download-copy {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.download-end {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.7rem;
+  flex-wrap: wrap;
 }
 
 .preview-stack,
