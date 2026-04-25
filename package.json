@@ -15,7 +15,8 @@
     "assets:audio:suno": "node scripts/generate-evolink-suno-audio.mjs",
     "assets:audio:final": "node scripts/generate-final-polish-audio.mjs",
     "assets:audio:polish": "node scripts/polish-audio-assets.mjs",
-    "deploy:assets": "node scripts/prepare-vercel-static-assets.mjs"
+    "deploy:assets": "node scripts/prepare-vercel-static-assets.mjs",
+    "deploy:prod": "vercel build --prod && npm run deploy:assets && vercel deploy --prebuilt --prod --yes"
   },
   "dependencies": {
     "mdx-m3-viewer": "^5.12.0",
