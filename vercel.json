@@ -1,0 +1,16 @@
+{
+  "rewrites": [
+    {
+      "source": "/viewer/:path*",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/capture/:path*",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/thumbnail/:path*",
+      "destination": "/index.html"
+    }
+  ]
+}

@@ -1,5 +1,5 @@
 {
-  "name": "shareapp",
+  "name": "wc3dotashop",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -7,11 +7,21 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "assets:import-shared": "node scripts/import-shared-wc3-textures.mjs",
+    "assets:manifest": "node scripts/generate-wc3-asset-manifest.mjs",
+    "assets:thumbnails": "node scripts/generate-inventory-thumbnails.mjs",
+    "assets:videos": "node scripts/generate-preview-videos.mjs",
+    "assets:audio:suno": "node scripts/generate-evolink-suno-audio.mjs",
+    "assets:audio:final": "node scripts/generate-final-polish-audio.mjs",
+    "assets:audio:polish": "node scripts/polish-audio-assets.mjs",
+    "deploy:assets": "node scripts/prepare-vercel-static-assets.mjs"
   },
   "dependencies": {
+    "mdx-m3-viewer": "^5.12.0",
     "react": "^19.2.4",
-    "react-dom": "^19.2.4"
+    "react-dom": "^19.2.4",
+    "stripe": "^19.2.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.4",

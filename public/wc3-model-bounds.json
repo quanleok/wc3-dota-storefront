@@ -1,0 +1,134 @@
+{
+  "models-premium/pudge-arcane/pudge.preview.mdx": {
+    "x": 16.4506,
+    "y": -4.1874,
+    "z": 92.8746,
+    "r": 149.6046
+  },
+  "models-premium/faceless-void-king/facelessking.mdx": {
+    "x": 15.284,
+    "y": -5.2554,
+    "z": 64.5589,
+    "r": 96.1052
+  },
+  "models-premium/axe-grommash/grommashhellscreamchaos.preview.mdx": {
+    "x": 34.1319,
+    "y": -25.032,
+    "z": 71.6041,
+    "r": 100.8346
+  },
+  "models-premium/earthshaker-magma/tauren.preview.mdx": {
+    "x": -37.5972,
+    "y": -24.7917,
+    "z": 73.8231,
+    "r": 143.1057
+  },
+  "models-premium/slark-dreameater/dreameater.clean.mdx": {
+    "x": 2.0962,
+    "y": -7.1551,
+    "z": 28.6595,
+    "r": 113.0474
+  },
+  "models-premium/morphling-tidal/morph.mdx": {
+    "x": -8.9717,
+    "y": -0.0695,
+    "z": 106.3834,
+    "r": 145.5173
+  },
+  "models-premium/tusk-turtle/turtletusk.preview.mdx": {
+    "x": -13.0574,
+    "y": -6,
+    "z": 83.179,
+    "r": 100.2277
+  },
+  "models-premium/slardar-tidebaron/tidebaron.preview.mdx": {
+    "x": 31.0815,
+    "y": 0.1541,
+    "z": 83.5469,
+    "r": 170.3816
+  },
+  "models-premium/ursa-cursed/ursa.cleaned.mdx": {
+    "x": -0.5018,
+    "y": -0.3131,
+    "z": 68.0178,
+    "r": 82.6931
+  },
+  "models-premium/monkey-king-arcane/heromk.preview.mdx": {
+    "x": -8.0651,
+    "y": -2.656,
+    "z": 85.8453,
+    "r": 188.1933
+  },
+  "models-premium/riki-red/reddish.preview.mdx": {
+    "x": 13.7459,
+    "y": 5.6632,
+    "z": 63.7638,
+    "r": 106.1973
+  },
+  "models-premium/sniper-golden/sniper.preview.mdx": {
+    "x": -3.2192,
+    "y": 7.085,
+    "z": 38.7349,
+    "r": 82.2629
+  },
+  "models-premium/invoker-dark/heroinvokerdark.preview.mdx": {
+    "x": 16.9944,
+    "y": -0.8252,
+    "z": 69.4683,
+    "r": 92.6385
+  },
+  "models-premium/zeus-battlepriest/battlepriest.preview.mdx": {
+    "x": 18.1397,
+    "y": -9.7054,
+    "z": 54.0213,
+    "r": 72.8709
+  },
+  "models-premium/faceless-void-deepwater/void.mdx": {
+    "x": 12.0514,
+    "y": 1.1133,
+    "z": 59.322,
+    "r": 88.6326
+  },
+  "models-premium/juggernaut-wandering/wanderingswordman_var4.preview.mdx": {
+    "x": 31.9957,
+    "y": -3.0226,
+    "z": 82.678,
+    "r": 110.6589
+  },
+  "models-premium/anti-mage-shinyblades/ammodel.preview.mdx": {
+    "x": 46.704,
+    "y": -2.1105,
+    "z": 89.7574,
+    "r": 192.0554
+  },
+  "models-premium/legion-commander-terenas/terenasonhorse.preview.mdx": {
+    "x": -3,
+    "y": -1,
+    "z": 78.0064,
+    "r": 118.4351
+  },
+  "models-premium/windranger-bloodelf/bloodelfwr.mdx": {
+    "x": -5.348,
+    "y": 24.0005,
+    "z": 54.0185,
+    "r": 96.5105
+  },
+  "models-premium/luna-dark/huntress4.preview.mdx": {
+    "x": 8.8435,
+    "y": -3.8373,
+    "z": 81.2082,
+    "r": 112.3595
+  },
+  "models-premium/lone-druid-ice/icedruid.preview.mdx": {
+    "x": -3.4985,
+    "y": 15.6216,
+    "z": 77.545,
+    "r": 143.3947
+  },
+  "models-premium/enigma-d2/enigma.preview.mdx": {
+    "x": 4.405,
+    "y": -1.766,
+    "z": 113.1305,
+    "r": 223.8038
+  }
+}

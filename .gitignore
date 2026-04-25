@@ -12,6 +12,20 @@ dist
 dist-ssr
 *.local
 
+# Large local asset payloads live outside this repo:
+# /Users/quan/Downloads/dota/site-assets/w3dotashop-public
+public/audio/
+public/game-scene/
+public/generated/
+public/mdx-test/
+public/models/
+public/models-optimized/
+public/models-original/
+public/models-premium/
+public/wc3-textures/
+music/
+dogfood-output/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
@@ -22,3 +36,4 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+.vercel

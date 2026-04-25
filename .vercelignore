@@ -1,0 +1,12 @@
+dist
+node_modules
+public/audio
+public/game-scene
+public/generated
+public/mdx-test
+public/models
+public/models-optimized
+public/models-original
+public/models-premium
+public/wc3-textures
+public/downloads
