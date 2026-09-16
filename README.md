@@ -1,4 +1,16 @@
-# wc3dotashop
+# WC3 DotA Storefront
+
+React and TypeScript storefront prototype with 3D previews, BattleTag checkout, and admin order tools.
+
+## Project overview
+
+**Stack:** React, TypeScript, Vite and Stripe.
+
+**Implemented work:** Product browsing, 3D previews, checkout flows, and admin order interfaces.
+
+**Status and limits:** The checkout contains demo fixtures and relies on an external asset workspace. It is not a production-readiness claim. Third-party asset redistribution must be reviewed.
+
+## Development documentation
 
 A Warcraft III Reforged storefront for DotA custom-map cosmetics.
 
